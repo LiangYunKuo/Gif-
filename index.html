@@ -13,20 +13,21 @@
         input[type="text"]:focus { border-color: #007bff; outline: none; }
         .result-box { margin-top: 20px; padding: 15px; background: #e9f5ff; border: 1px solid #b8daff; border-radius: 8px; word-break: break-all; display: none; }
         .result-text { font-size: 16px; color: #0056b3; font-weight: bold; margin: 10px 0; }
-        .copy-btn { display: block; width: 100%; padding: 12px; background: #28a745; color: white; border: none; border-radius: 8px; cursor: pointer; margin-top: 15px; font-size: 16px; font-weight: bold; transition: background 0.3s; }
+        .copy-btn { display: block; width: 100%; padding: 12px; background: #28a745; color: white; border: none; border-radius: 8px; cursor: pointer; margin-top: 15px; font-size: 16px; font-weight: bold; transition: background 0.3s, transform 0.1s; }
         .copy-btn:hover { background: #218838; }
+        .copy-btn:active { transform: scale(0.98); }
     </style>
 </head>
 <body>
     <div class="container">
         <h2>🔗 網址快速轉換工具</h2>
-        <p>請在下方貼上原始網址，並按下 <strong>Enter</strong> 鍵</p>
+        <p>請在下方<strong>貼上</strong>原始網址（會自動轉換並複製）</p>
         <input type="text" id="urlInput" placeholder="例如：https://imgflip.com/gif/b13o9e">
         
         <div id="resultContainer" class="result-box">
             <span style="color: #555; font-size: 14px;">轉換結果：</span>
             <div id="resultUrl" class="result-text"></div>
-            <button class="copy-btn" onclick="copyToClipboard()">一鍵複製網址</button>
+            <button id="copyBtn" class="copy-btn" onclick="manualCopy()">手動複製網址</button>
         </div>
     </div>
 
@@ -34,24 +35,33 @@
         const input = document.getElementById('urlInput');
         const resultContainer = document.getElementById('resultContainer');
         const resultUrl = document.getElementById('resultUrl');
+        const copyBtn = document.getElementById('copyBtn');
 
-        // 監聽 Enter 鍵
-        input.addEventListener('keypress', function (e) {
-            if (e.key === 'Enter') {
-                convertUrl();
+        // 1. 監聽「貼上」事件 (最快的自動化體驗)
+        input.addEventListener('paste', function (e) {
+            // 取得使用者貼上的文字
+            let pastedText = (e.clipboardData || window.clipboardData).getData('text');
+            if (pastedText) {
+                e.preventDefault(); // 阻止文字出現在輸入框，因為我們會直接轉換並清空
+                processUrl(pastedText);
             }
         });
 
-        function convertUrl() {
-            let url = input.value.trim();
+        // 2. 保留監聽「Enter」鍵 (以防使用者手動輸入網址)
+        input.addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') {
+                processUrl(input.value);
+                input.value = ''; // 清空輸入框
+            }
+        });
+
+        // 核心轉換邏輯
+        function processUrl(url) {
+            url = url.trim();
             if (!url) return;
 
-            // 執行轉換邏輯
-            // 1. https:// 替換為 https://i.
-            let newUrl = url.replace("https://", "https://i.");
-            // 2. 將中間的 /gif/ 替換為 /
-            newUrl = newUrl.replace("/gif/", "/");
-            // 3. 確保結尾有 .gif (避免重複加上)
+            // 執行轉換
+            let newUrl = url.replace("https://", "https://i.").replace("/gif/", "/");
             if (!newUrl.endsWith(".gif")) {
                 newUrl += ".gif";
             }
@@ -59,18 +69,33 @@
             // 顯示結果
             resultUrl.textContent = newUrl;
             resultContainer.style.display = 'block';
-            
-            // 自動清空輸入框，方便下一次貼上
-            input.value = '';
+
+            // 轉換完成後，立刻自動複製
+            autoCopy(newUrl);
         }
 
-        // 複製到剪貼簿的功能
-        function copyToClipboard() {
-            navigator.clipboard.writeText(resultUrl.textContent).then(() => {
-                alert('✅ 網址已成功複製！');
+        // 複製到剪貼簿與按鈕視覺回饋
+        function autoCopy(textToCopy) {
+            navigator.clipboard.writeText(textToCopy).then(() => {
+                // 複製成功：更改按鈕文字與顏色作為提示
+                copyBtn.textContent = '✅ 已自動複製！可以直接去貼上了';
+                copyBtn.style.background = '#20c997'; // 變成稍微亮一點的藍綠色
+                
+                // 2 秒後恢復原狀
+                setTimeout(() => {
+                    copyBtn.textContent = '手動複製網址';
+                    copyBtn.style.background = '#28a745';
+                }, 2000);
             }).catch(err => {
-                alert('複製失敗，請手動選取複製。');
+                // 如果瀏覽器阻擋自動複製，至少提示使用者自己按
+                console.error('自動複製失敗', err);
+                copyBtn.textContent = '請點擊此處手動複製';
             });
+        }
+
+        // 提供給按鈕點擊用的手動複製功能
+        function manualCopy() {
+            autoCopy(resultUrl.textContent);
         }
     </script>
 </body>
