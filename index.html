@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>網址快速轉換工具</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; background-color: #f4f7f6; margin: 0; }
+        .container { background: white; padding: 40px; border-radius: 12px; box-shadow: 0 8px 16px rgba(0,0,0,0.1); width: 100%; max-width: 500px; box-sizing: border-box; }
+        h2 { text-align: center; color: #333; margin-top: 0; }
+        p { color: #666; font-size: 14px; text-align: center; }
+        input[type="text"] { width: 100%; padding: 12px; margin: 15px 0; border: 2px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 16px; transition: border-color 0.3s; }
+        input[type="text"]:focus { border-color: #007bff; outline: none; }
+        .result-box { margin-top: 20px; padding: 15px; background: #e9f5ff; border: 1px solid #b8daff; border-radius: 8px; word-break: break-all; display: none; }
+        .result-text { font-size: 16px; color: #0056b3; font-weight: bold; margin: 10px 0; }
+        .copy-btn { display: block; width: 100%; padding: 12px; background: #28a745; color: white; border: none; border-radius: 8px; cursor: pointer; margin-top: 15px; font-size: 16px; font-weight: bold; transition: background 0.3s; }
+        .copy-btn:hover { background: #218838; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>🔗 網址快速轉換工具</h2>
+        <p>請在下方貼上原始網址，並按下 <strong>Enter</strong> 鍵</p>
+        <input type="text" id="urlInput" placeholder="例如：https://imgflip.com/gif/b13o9e">
+        
+        <div id="resultContainer" class="result-box">
+            <span style="color: #555; font-size: 14px;">轉換結果：</span>
+            <div id="resultUrl" class="result-text"></div>
+            <button class="copy-btn" onclick="copyToClipboard()">一鍵複製網址</button>
+        </div>
+    </div>
+
+    <script>
+        const input = document.getElementById('urlInput');
+        const resultContainer = document.getElementById('resultContainer');
+        const resultUrl = document.getElementById('resultUrl');
+
+        // 監聽 Enter 鍵
+        input.addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') {
+                convertUrl();
+            }
+        });
+
+        function convertUrl() {
+            let url = input.value.trim();
+            if (!url) return;
+
+            // 執行轉換邏輯
+            // 1. https:// 替換為 https://i.
+            let newUrl = url.replace("https://", "https://i.");
+            // 2. 將中間的 /gif/ 替換為 /
+            newUrl = newUrl.replace("/gif/", "/");
+            // 3. 確保結尾有 .gif (避免重複加上)
+            if (!newUrl.endsWith(".gif")) {
+                newUrl += ".gif";
+            }
+
+            // 顯示結果
+            resultUrl.textContent = newUrl;
+            resultContainer.style.display = 'block';
+            
+            // 自動清空輸入框，方便下一次貼上
+            input.value = '';
+        }
+
+        // 複製到剪貼簿的功能
+        function copyToClipboard() {
+            navigator.clipboard.writeText(resultUrl.textContent).then(() => {
+                alert('✅ 網址已成功複製！');
+            }).catch(err => {
+                alert('複製失敗，請手動選取複製。');
+            });
+        }
+    </script>
+</body>
+</html>
